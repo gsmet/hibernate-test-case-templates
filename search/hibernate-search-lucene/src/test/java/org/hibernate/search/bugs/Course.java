@@ -6,24 +6,26 @@ import javax.persistence.Id;
 import org.hibernate.search.annotations.DocumentId;
 import org.hibernate.search.annotations.Field;
 import org.hibernate.search.annotations.Indexed;
+import org.hibernate.search.annotations.TermVector;
 
 @Entity
 @Indexed
-public class YourAnnotatedEntity {
+public class Course {
 
 	@Id
 	@DocumentId
 	private Long id;
 
-	@Field
+	@Field (termVector = TermVector.YES)
 	private String name;
 
-	protected YourAnnotatedEntity() {
-	}
+	@Field
+	private String description;
 
-	public YourAnnotatedEntity(Long id, String name) {
+	public Course(Long id, String name, String description) {
 		this.id = id;
 		this.name = name;
+		this.description = description;
 	}
 
 	public Long getId() {
@@ -38,4 +40,11 @@ public class YourAnnotatedEntity {
 		this.name = name;
 	}
 
+	public String getDescription() {
+		return description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
+	}
 }

@@ -17,7 +17,7 @@ public class YourTestCase extends SearchTestBase {
 
 	@Override
 	public Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[]{ YourAnnotatedEntity.class };
+		return new Class<?>[]{ Course.class };
 	}
 
 	@Test
@@ -25,21 +25,38 @@ public class YourTestCase extends SearchTestBase {
 	@SuppressWarnings("unchecked")
 	public void testYourBug() {
 		try ( Session s = getSessionFactory().openSession() ) {
-			YourAnnotatedEntity yourEntity1 = new YourAnnotatedEntity( 1L, "example" );
-			YourAnnotatedEntity yourEntity2 = new YourAnnotatedEntity( 2L, "test" );
-	
+			Course yourEntity26 = new Course( 26L, "java", "java" );
+			Course yourEntity49 = new Course( 49L, "Java 10", "muy copado" );
+			Course yourEntity53 = new Course( 53L, "Java", "java Michael Javson ..." );
+			Course yourEntity54 = new Course( 54L, "Java", "java Michael Javson ..." );
+
 			Transaction tx = s.beginTransaction();
-			s.persist( yourEntity1 );
-			s.persist( yourEntity2 );
+			s.persist( yourEntity26 );
+			s.persist( yourEntity49 );
+			s.persist( yourEntity53 );
+			s.persist( yourEntity54 );
 			tx.commit();
-	
-			FullTextSession session = Search.getFullTextSession( s );
-			QueryBuilder qb = session.getSearchFactory().buildQueryBuilder().forEntity( YourAnnotatedEntity.class ).get();
-			Query query = qb.keyword().onField( "name" ).matching( "example" ).createQuery();
-	
-			List<YourAnnotatedEntity> result = (List<YourAnnotatedEntity>) session.createFullTextQuery( query ).list();
-			assertEquals( 1, result.size() );
-			assertEquals( 1l, (long) result.get( 0 ).getId() );
+
+			// What you are doing
+			{
+				FullTextSession session = Search.getFullTextSession( s );
+				QueryBuilder qb = session.getSearchFactory().buildQueryBuilder().forEntity( Course.class ).get();
+				Query query = qb.phrase().onField( "name" ).andField( "description" ).sentence( "java" ).createQuery();
+
+				List<Course> result = (List<Course>) session.createFullTextQuery( query ).list();
+				assertEquals( 4, result.size() );
+			}
+
+			// What I recommend (the above works but this should be better for a full text search)
+			// see http://docs.jboss.org/hibernate/stable/search/reference/en-US/html_single/#_simple_query_string_queries
+			{
+				FullTextSession session = Search.getFullTextSession( s );
+				QueryBuilder qb = session.getSearchFactory().buildQueryBuilder().forEntity( Course.class ).get();
+				Query query = qb.simpleQueryString().onField( "name" ).andField( "description" ).matching( "java" ).createQuery();
+
+				List<Course> result = (List<Course>) session.createFullTextQuery( query ).list();
+				assertEquals( 4, result.size() );
+			}
 		}
 	}
 
